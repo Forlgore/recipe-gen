@@ -1,9 +1,8 @@
-name: Ingest Recipe from Issue (append to Repo B)
+name: Ingest Recipe from Issue (append to Repo B .recipes[])
 
 on:
   issues:
-    types: [opened]   # Fires when a new issue is created in Repo A (workflow must be on default branch)
-                      # Ref: GH Actions "Events that trigger workflows" docs. [1](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens)
+    types: [opened]  # Must be on default branch to trigger on repo events. [1](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens)
 
 jobs:
   ingest:
@@ -13,13 +12,13 @@ jobs:
       - name: Check out Repo A
         uses: actions/checkout@v4
 
-      # Optional: only needed if you keep the normalization step with Node.js
+      # Optional only if you keep the normalization helper in Repo A (tools/generate_recipe_json.js)
       - name: Set up Node.js (optional)
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Install jq (JSON CLI)
+      - name: Install jq
         run: |
           sudo apt-get update -y
           sudo apt-get install -y jq
@@ -29,14 +28,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Save the full issue body to a file
           printf "%s" '${{ github.event.issue.body }}' > body.txt
 
-          # Extract the first fenced ```json ... ``` block into recipe.input.json
-          # If you used the provided HTML page or an issue template, the payload is exactly in this fenced block.
+          # Take the first fenced ```json ... ``` block from the issue body
           awk 'BEGIN{injson=0} /^```json/{injson=1; next} /^```/{if(injson==1){exit}} {if(injson==1) print}' body.txt > recipe.input.json || true
 
-          # Basic checks
+          # Sanity checks
           if ! [ -s recipe.input.json ]; then
             echo "No JSON payload found in the issue body fenced block."
             exit 1
@@ -48,30 +45,30 @@ jobs:
           echo "JSON_FILE=recipe.input.json" >> "$GITHUB_ENV"
 
       # -------- OPTIONAL NORMALIZATION --------
-      # Keep this step if you included tools/generate_recipe_json.js in Repo A to recompute tags/atoms, etc.
-      # Otherwise, remove this step and let JSON_FILE remain recipe.input.json.
+      # Keep this step IF you included tools/generate_recipe_json.js in Repo A.
+      # Otherwise, remove this step and keep JSON_FILE pointing to recipe.input.json.
       - name: Normalize/validate payload (optional)
         run: |
           node tools/generate_recipe_json.js
           echo "JSON_FILE=generated_recipe.json" >> "$GITHUB_ENV"
       # ----------------------------------------
 
-      - name: Append recipe to Repo B (data/recipes.json)
+      - name: Append recipe to Repo B (data/recipes.json -> .recipes[])
         env:
-          GH_TOKEN: ${{ secrets.generator }}     # fine-grained PAT with Contents:read&write on Repo B
+          GH_TOKEN: ${{ secrets.generator }}   # Fine-grained PAT with Contents: read & write on Repo B
         run: |
           set -euo pipefail
 
           # ---------- CONFIGURE YOUR TARGET REPOSITORY (Repo B) ----------
-          TARGET_REPO_OWNER="Forlgore"                 # <-- CHANGE ME
-          TARGET_REPO_NAME="recipe-frontend"           # <-- CHANGE ME
-          TARGET_FILE_PATH="data/recipes.json"         # <-- CHANGE ME if your path differs
-          TARGET_BRANCH="main"                         # <-- CHANGE ME if Repo B default branch differs
+          TARGET_REPO_OWNER="Forlgore"                 # <-- set to Repo B owner
+          TARGET_REPO_NAME="recipe-frontend"           # <-- set to Repo B name
+          TARGET_FILE_PATH="data/recipes.json"         # <-- set if path differs
+          TARGET_BRANCH="main"                         # <-- set to Repo B default branch
           # ----------------------------------------------------------------
 
           FILE_URL="https://api.github.com/repos/$TARGET_REPO_OWNER/$TARGET_REPO_NAME/contents/$TARGET_FILE_PATH?ref=$TARGET_BRANCH"
 
-          # Fetch current file to obtain its blob sha (if it exists) and content
+          # Fetch current file (to get sha and current content)
           HTTP_STATUS=$(
             curl -sS -w "%{http_code}" -o response.json \
               -H "Authorization: Bearer $GH_TOKEN" \
@@ -79,68 +76,73 @@ jobs:
               "$FILE_URL"
           )
 
-          NEW_ITEM="$(cat "$JSON_FILE")"
-          SHA=""
-          if [ "$HTTP_STATUS" = "200" ]; then
-            # File exists: decode Base64 content and merge
-            SHA=$(jq -r '.sha' < response.json)
-            jq -r '.content' < response.json | tr -d '\n' | base64 -d > current.json
-
-            # If Repo B stores a plain JSON array, append; if it stores { "recipes": [] }, append there.
-            if jq -e 'type=="array"' current.json > /dev/null; then
-              jq --slurp '.[0] + [.[1]]' current.json "$JSON_FILE" > merged.json
-            elif jq -e 'has("recipes") and .recipes|type=="array"' current.json > /dev/null; then
-              jq --slurp '.[0] | .recipes = (.recipes + [.[1]])' current.json "$JSON_FILE" > merged.json
-            else
-              # Fallback: wrap both as arrays then add
-              jq --slurp '.[0], [.[1]] | add' current.json "$JSON_FILE" > merged.json
-            fi
-
-          elif [ "$HTTP_STATUS" = "404" ]; then
-            # File does not exist yet: start a new array with the incoming item
-            jq -n --argjson item "$NEW_ITEM" '[ $item ]' > merged.json
-          else
-            echo "Unexpected HTTP status while reading target file: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "ERROR: Expected existing object with .recipes array in Repo B. HTTP status: $HTTP_STATUS"
+            echo "The ingest workflow is configured for an object-shaped file: { \"recipes\": [ ... ] }"
             cat response.json || true
             exit 1
           fi
 
-          # Create/update file contents requires Base64-encoded content and (on update) the current blob sha
+          # Decode current content and confirm structure: { "recipes": [ ... ] }
+          jq -r '.content' < response.json | tr -d '\n' | base64 -d > current.json
+          if ! jq -e 'type=="object" and has("recipes") and .recipes|type=="array"' current.json > /dev/null; then
+            echo "ERROR: Repo B file is not an object with a .recipes array."
+            echo "Observed structure:"
+            jq 'type as $t | {type:$t, keys: (keys? // [])}' current.json || true
+            exit 1
+          fi
+
+          # Merge: append the new item strictly into .recipes[]
+          jq --slurp '.[0] as $cur | .[1] as $new
+              | if ($cur|has("recipes") and ($cur.recipes|type=="array"))
+                then $cur | .recipes = (.recipes + [$new])
+                else $cur
+                end' current.json "$JSON_FILE" > merged.json
+
+          # Prepare commit message (use recipe name if available)
+          COMMIT_MSG="Append recipe to recipes.json (issue ingest)"
+          NAME_FROM_JSON="$(jq -r 'try .name // empty' "$JSON_FILE")"
+          if [ -n "$NAME_FROM_JSON" ]; then
+            COMMIT_MSG="Append: ${NAME_FROM_JSON}"
+          fi
+
+          # Base64-encode new content (required by GitHub Create/Update Contents API)
           NEW_CONTENT_B64="$(base64 -w 0 < merged.json)"
+
+          SHA="$(jq -r '.sha' < response.json)"
 
           BODY="$(
             jq -n \
-              --arg message "Append recipe to recipes.json (issue ingest)" \
+              --arg message "$COMMIT_MSG" \
               --arg content "$NEW_CONTENT_B64" \
               --arg branch "$TARGET_BRANCH" \
               --arg sha "$SHA" \
-              'if $sha == "" then
-                 {message:$message, content:$content, branch:$branch}
-               else
-                 {message:$message, content:$content, sha:$sha, branch:$branch}
-               end'
+              '{message:$message, content:$content, sha:$sha, branch:$branch}'
           )"
 
           UPDATE_URL="https://api.github.com/repos/$TARGET_REPO_OWNER/$TARGET_REPO_NAME/contents/$TARGET_FILE_PATH"
 
           # PUT /repos/{owner}/{repo}/contents/{path} — Create or update file contents
-          # This is the official endpoint for file writes; it must receive Base64 content and
-          # include the file's current sha when updating an existing path.
           curl -sS -X PUT \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             -H "Content-Type: application/json" \
             -d "$BODY" \
             "$UPDATE_URL" | tee update_response.json
-          # Ref: "Create or update file contents" in GitHub REST API. [2](https://github.com/actions/setup-node/releases)
+          # Uses the documented Contents API which requires Base64 and file sha for updates. [2](https://github.com/actions/setup-node/releases)
 
       - name: Comment result & close issue (optional)
+        if: ${{ always() }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}     # auto-provided for the current repo (Repo A)
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           issue_number='${{ github.event.issue.number }}'
-          echo "Thanks! Your recipe has been processed and appended to Repo B." > comment.md
+          if [ -f update_response.json ]; then
+            echo "Thanks! Your recipe has been appended to Repo B (.recipes[])." > comment.md
+          else
+            echo "We attempted to process your recipe, but an error occurred. Please check the workflow logs." > comment.md
+          fi
           gh api repos/${{ github.repository }}/issues/$issue_number/comments -f body="$(cat comment.md)"
+          # Close the issue (optional)
           gh api repos/${{ github.repository }}/issues/$issue_number -X PATCH -f state=closed
-``
