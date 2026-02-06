@@ -1,12 +1,55 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Recipe Editor — Ingredients Component JSON (Dark/Petrol)</title>
+  <title>Recipe Generator — Submit to GitHub via Worker</title>
   <style>
-    :root { --bg-0:#0b1216;--bg-1:#0f1a20;--bg-2:#13232b;--petrol:#1b6573;--petrol-600:#167183;--petrol-700:#145b69;--text-0:#e8f1f5;--text-1:#aec3cc;--border:#20323a;--danger:#d24c4c;--muted:#778891;--radius:12px;--radius-sm:8px;--shadow:0 8px 32px rgba(0,0,0,0.35);--shadow-soft:0 4px 16px rgba(0,0,0,0.25);--focus:0 0 0 2px rgba(27,101,115,0.35);}html,body{height:100%;background:radial-gradient(1200px 800px at 20% 0%,#0c171d 0%,var(--bg-0) 60%) fixed;color:var(--text-0);font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.45;margin:0}.container{max-width:1080px;margin:28px auto;padding:0 20px 40px}header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;min-height:44px}.title{font-size:28px;font-weight:700;letter-spacing:.2px}.card{background:linear-gradient(180deg,rgba(19,35,43,0.6),rgba(15,26,32,0.8));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-soft);padding:16px;margin-bottom:16px;backdrop-filter:blur(4px)}.card h2{font-size:16px;margin:0 0 12px;color:var(--text-0);font-weight:600}.grid{display:grid;gap:12px}@media (min-width:760px){.grid.cols-4{grid-template-columns:160px 1.2fr 140px 1fr}}label{display:block;font-size:12px;color:var(--text-1);margin-bottom:6px;letter-spacing:.3px}input[type="text"],input[type="number"],.chip-input,textarea,select{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid var(--border);background:#101b21;color:var(--text-0);border-radius:var(--radius-sm);outline:none;transition:border-color .15s ease,background .15s ease,box-shadow .15s ease}input::placeholder,textarea::placeholder{color:#8aa0a9}input:focus,textarea:focus,select:focus,.chip-input:focus-within{border-color:var(--petrol);box-shadow:var(--focus);background:var(--bg-2)}.chip-input{display:flex;gap:8px;flex-wrap:wrap;padding:8px;min-height:44px;align-items:center}.chip-input input{flex:1;min-width:140px;border:none;padding:6px 8px;background:transparent;color:var(--text-0);outline:none}.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:linear-gradient(180deg,rgba(27,101,115,0.25),rgba(27,101,115,0.12));border:1px solid rgba(27,101,115,0.35);color:var(--text-0);font-size:13px}.chip button{appearance:none;border:0;background:transparent;color:var(--text-1);cursor:pointer;font-size:14px;line-height:1;padding:0 0 0 2px}.chip button:hover{color:#fff}.ingredient-row{display:grid;grid-template-columns:180px 1.3fr 1fr 130px 36px;gap:10px;align-items:center;margin-bottom:10px}.ingredient-row .notes{min-width:260px}.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.btn{appearance:none;border:1px solid var(--border);background:linear-gradient(180deg,#14232b,#101b21);color:var(--text-0);border-radius:10px;padding:10px 14px;cursor:pointer;font-size:14px;transition:transform .05s ease,background .15s ease,border-color .15s ease;box-shadow:inset 0 0 0 1px rgba(255,255,255,.02)}.btn:hover{border-color:var(--petrol-600);background:linear-gradient(180deg,#152a33,#102129)}.btn:active{transform:translateY(1px)}.btn.primary{background:linear-gradient(180deg,#1b6573,#145b69);border-color:#197281}.btn.primary:hover{background:linear-gradient(180deg,#207e90,#176a78);border-color:#1e879a}.btn.icon{width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0;font-size:18px}.btn.danger{border-color:rgba(210,76,76,0.3);background:linear-gradient(180deg,rgba(210,76,76,0.18),rgba(210,76,76,0.12));color:#ffdddd}.btn.danger:hover{border-color:rgba(210,76,76,0.5);background:linear-gradient(180deg,rgba(210,76,76,0.28),rgba(210,76,76,0.18))}#instructions{width:100%;min-height:260px;resize:vertical}.output{background:linear-gradient(180deg,rgba(19,35,43,0.7),rgba(15,26,32,0.9));border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}.output-header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding:10px 12px;background:linear-gradient(180deg,#0f1a20,#0b1216)}.output-header h3{margin:0;font-size:15px;font-weight:600;color:var(--text-0);letter-spacing:.2px}.output-body{background:#0b1020;color:#e5eefc;padding:12px;overflow:auto;max-height:420px}pre{margin:0;white-space:pre;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:13px;line-height:1.45}.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.hint{font-size:12px;color:var(--muted)}.spacer{height:6px}.status{font-size:12px;color:var(--text-1)}.status .ok{color:#7bd389}.status .err{color:#ff8e8e}
+    :root {
+      --bg-0: #0b1216; --bg-1: #0f1a20; --bg-2: #13232b; --petrol: #1b6573;
+      --petrol-600: #167183; --petrol-700: #145b69; --text-0: #e8f1f5; --text-1: #aec3cc;
+      --border: #20323a; --danger: #d24c4c; --muted: #778891;
+      --radius: 12px; --radius-sm: 8px; --shadow: 0 8px 32px rgba(0,0,0,0.35);
+      --shadow-soft: 0 4px 16px rgba(0,0,0,0.25); --focus: 0 0 0 2px rgba(27,101,115,0.35);
+    }
+    html, body { height: 100%; background: radial-gradient(1200px 800px at 20% 0%, #0c171d 0%, var(--bg-0) 60%) fixed; color: var(--text-0); font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; line-height: 1.45; margin: 0; }
+    .container { max-width: 1080px; margin: 28px auto; padding: 0 20px 40px; }
+    header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; min-height: 44px; }
+    .title { font-size: 28px; font-weight: 700; letter-spacing: 0.2px; }
+    .card { background: linear-gradient(180deg, rgba(19,35,43,0.6), rgba(15,26,32,0.8)); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-soft); padding: 16px; margin-bottom: 16px; backdrop-filter: blur(4px); }
+    .card h2 { font-size: 16px; margin: 0 0 12px; color: var(--text-0); font-weight: 600; }
+    .grid { display: grid; gap: 12px; }
+    @media (min-width: 760px) { .grid.cols-4 { grid-template-columns: 160px 1.2fr 140px 1fr; } }
+    label { display: block; font-size: 12px; color: var(--text-1); margin-bottom: 6px; letter-spacing: 0.3px; }
+    input[type="text"], input[type="number"], .chip-input, textarea, select { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--border); background: #101b21; color: var(--text-0); border-radius: var(--radius-sm); outline: none; transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease; }
+    input::placeholder, textarea::placeholder { color: #8aa0a9; }
+    input:focus, textarea:focus, select:focus, .chip-input:focus-within { border-color: var(--petrol); box-shadow: var(--focus); background: var(--bg-2); }
+    .chip-input { display: flex; gap: 8px; flex-wrap: wrap; padding: 8px; min-height: 44px; align-items: center; }
+    .chip-input input { flex: 1; min-width: 140px; border: none; padding: 6px 8px; background: transparent; color: var(--text-0); outline: none; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: linear-gradient(180deg, rgba(27,101,115,0.25), rgba(27,101,115,0.12)); border: 1px solid rgba(27,101,115,0.35); color: var(--text-0); font-size: 13px; }
+    .chip button { appearance: none; border: 0; background: transparent; color: var(--text-1); cursor: pointer; font-size: 14px; line-height: 1; padding: 0 0 0 2px; }
+    .chip button:hover { color: #fff; }
+    .ingredient-row { display: grid; grid-template-columns: 180px 1.3fr 1fr 130px 36px; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .ingredient-row .notes { min-width: 260px; }
+    .btn { appearance: none; border: 1px solid var(--border); background: linear-gradient(180deg, #14232b, #101b21); color: var(--text-0); border-radius: 10px; padding: 10px 14px; cursor: pointer; font-size: 14px; transition: transform 0.05s ease, background 0.15s ease, border-color 0.15s ease; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02); }
+    .btn:hover { border-color: var(--petrol-600); background: linear-gradient(180deg, #152a33, #102129); }
+    .btn:active { transform: translateY(1px); }
+    .btn.primary { background: linear-gradient(180deg, #1b6573, #145b69); border-color: #197281; }
+    .btn.primary:hover { background: linear-gradient(180deg, #207e90, #176a78); border-color: #1e879a; }
+    .btn.icon { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; padding: 0; font-size: 18px; }
+    .btn.danger { border-color: rgba(210,76,76,0.3); background: linear-gradient(180deg, rgba(210,76,76,0.18), rgba(210,76,76,0.12)); color: #ffdddd; }
+    .btn.danger:hover { border-color: rgba(210,76,76,0.5); background: linear-gradient(180deg, rgba(210,76,76,0.28), rgba(210,76,76,0.18)); }
+    .output { background: linear-gradient(180deg, rgba(19,35,43,0.7), rgba(15,26,32,0.9)); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
+    .output-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding: 10px 12px; background: linear-gradient(180deg, #0f1a20, #0b1216); }
+    .output-header h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--text-0); letter-spacing: .2px; }
+    .output-body { background: #0b1020; color: #e5eefc; padding: 12px; overflow: auto; max-height: 420px; }
+    pre { margin: 0; white-space: pre; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 13px; line-height: 1.45; }
+    .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .hint { font-size: 12px; color: var(--muted); }
+    .spacer { height: 6px; }
+    .status { font-size: 12px; color: var(--text-1); margin-left: 8px; }
+    .status.ok { color: #7bd389; }
+    .status.err { color: #ff8e8e; }
   </style>
 </head>
 <body>
@@ -16,21 +59,21 @@
       <div class="row">
         <button class="btn" id="clear">Clear</button>
         <button class="btn" id="generate">Generate JSON</button>
-        <button class="btn primary" id="submit-to-github" title="Open a prefilled GitHub Issue to submit this recipe">Submit to GitHub</button>
-        <span class="status" id="status"></span>
+        <button class="btn primary" id="submit-worker" title="Send JSON to Worker">Submit to Worker</button>
+        <span id="status" class="status"></span>
       </div>
     </header>
 
     <section class="card">
       <h2>Recipe Details</h2>
       <div class="grid cols-4">
-        <div><label for="recipe-id">ID</label><input id="recipe-id" type="number" inputmode="numeric" placeholder="e.g., 2" /></div>
-        <div><label for="recipe-name">Name</label><input id="recipe-name" type="text" placeholder="Creamy Lemon Dill Chicken &amp; Rice Casserole" /></div>
+        <div><label for="recipe-id">ID</label><input id="recipe-id" type="number" inputmode="numeric" placeholder="e.g., 22" /></div>
+        <div><label for="recipe-name">Name</label><input id="recipe-name" type="text" placeholder="Cool pie" /></div>
         <div><label for="recipe-servings">Servings</label><input id="recipe-servings" type="number" inputmode="numeric" min="1" step="1" placeholder="e.g., 4" /></div>
         <div>
           <label for="tags-input">Tags (for search)</label>
           <div id="tags" class="chip-input" aria-label="Tags input"><input id="tags-input" type="text" placeholder="Type a tag and press Enter or comma…" /></div>
-          <div class="hint">Examples: <em>pie</em>, <em>casserole</em>, <em>salad</em>, <em>vegetarian</em>, <em>stew</em>, <em>asian</em></div>
+          <div class="hint">Examples: <em>pie</em>, <em>fruit</em>, <em>sweet</em></div>
         </div>
       </div>
     </section>
@@ -39,9 +82,9 @@
       <h2>Ingredients</h2>
       <div id="ingredient-list">
         <div class="ingredient-row">
-          <input type="text" placeholder="Amount (e.g., 500 g, 1 cup)" />
-          <input type="text" placeholder="Item (e.g., chicken breast)" />
-          <input type="text" class="notes" placeholder="Notes (e.g., cubed, unsalted)" />
+          <input type="text" placeholder="Amount (e.g., 100 g, 1 cup)" />
+          <input type="text" placeholder="Item (e.g., banana)" />
+          <input type="text" class="notes" placeholder="Notes (e.g., ripe)" />
           <select><option value="">Required</option><option value="optional">Optional</option></select>
           <button type="button" class="btn icon danger remove" aria-label="Remove ingredient" title="Remove">✕</button>
         </div>
@@ -52,7 +95,7 @@
 
     <section class="card">
       <h2>Instructions</h2>
-      <textarea id="instructions" placeholder="Enter all instructions here. One step per line."></textarea>
+      <textarea id="instructions" placeholder="Enter instructions, one step per line."></textarea>
     </section>
 
     <section class="output" aria-live="polite">
@@ -70,113 +113,213 @@
   </div>
 
   <script>
-    // === Replace with Repo A coordinates ===
-    const REPO_A_OWNER = 'your-org-or-user';
-    const REPO_A_NAME  = 'automation-and-ui';
+    // --- CONFIG: set these to your deployed Worker and secret ---
+    const WORKER_URL = 'https://<your-worker>.<subdomain>.workers.dev/'; // e.g., https://recipe-dispatch.example.workers.dev/
+    const WEBHOOK_SHARED_SECRET = '<YOUR_WEBHOOK_SECRET>';              // must match the secret set with `wrangler secret put WEBHOOK_SECRET`
 
+    // --- Small DOM helpers ---
     const q = (sel, root=document) => root.querySelector(sel);
     const qa = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-    const setStatus = (txt, klass='') => { const el=q('#status'); el.textContent = txt || ''; el.className='status '+klass; };
+    const setStatus = (msg, kind='') => { const el = q('#status'); el.textContent = msg || ''; el.className = 'status' + (kind ? ' ' + kind : ''); };
 
+    // --- Tag helpers ---
     const slugify = s => (s||'').toLowerCase().normalize('NFKD')
-      .replace(/[̀-ͯ]/g,'').replace(/\((?:.|
-)*?\)/g,' ')
+      .replace(/[\u0300-\u036f]/g,'').replace(/\((?:.|\n)*?\)/g,' ')
       .replace(/[&]/g,' and ').replace(/[^\w\s-]/g,' ').replace(/\s+/g,' ')
       .trim().replace(/[\s_]+/g,'-').replace(/-+/g,'-');
-    const keyFromItem = item => { const raw=(item||'').trim(); let s=raw.replace(/\((?:.|
-)*?\)/g,' ');
-      const DROP=['fresh','uncooked','raw']; s=s.replace(new RegExp('^\s*('+DROP.join('|')+')\b\s*','i'),''); return slugify(s); };
+    const keyFromItem = item => {
+      const raw = (item||'').trim();
+      let s = raw.replace(/\((?:.|\n)*?\)/g,' ');
+      const DROP = ['fresh','uncooked','raw'];
+      s = s.replace(new RegExp('^\\s*(' + DROP.join('|') + ')\\b\\s*','i'), '');
+      return slugify(s);
+    };
     const htmlEscape = str => (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
       .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
-    const tagContainer = q('#tags'); const tagInput = q('#tags-input'); let tags=[];
+    // --- Tags chip input ---
+    const tagContainer = q('#tags'); const tagInput = q('#tags-input'); let tags = [];
     const renderTags = () => { qa('.chip', tagContainer).forEach(c=>c.remove());
-      tags.forEach((t,idx)=>{ const chip=document.createElement('span'); chip.className='chip';
-        chip.innerHTML=`<span>${t}</span><button type="button" data-idx="${idx}">×</button>`; tagContainer.insertBefore(chip, tagInput); }); };
-    const addTag = raw => { const clean=slugify(raw||'').trim(); if(!clean||tags.includes(clean)) return; tags.push(clean); renderTags(); };
+      tags.forEach((t, idx) => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.innerHTML = `<span>${t}</span><button type="button" data-idx="${idx}" aria-label="Remove ${t}">×</button>`;
+        tagContainer.insertBefore(chip, tagInput);
+      });
+    };
+    const addTag = raw => { const clean = slugify(raw||'').trim(); if (!clean || tags.includes(clean)) return; tags.push(clean); renderTags(); };
     const removeTag = idx => { tags.splice(idx,1); renderTags(); };
-    tagContainer.addEventListener('click', e=>{ const b=e.target.closest('button[data-idx]'); if(!b)return; const i=Number(b.dataset.idx); if(!Number.isNaN(i)) removeTag(i); });
-    tagInput.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===','){ e.preventDefault(); addTag(tagInput.value); tagInput.value=''; }
-      else if(e.key==='Backspace'&&!tagInput.value&&tags.length){ tags.pop(); renderTags(); } });
-    tagInput.addEventListener('blur', ()=>{ if(tagInput.value.trim()){ addTag(tagInput.value); tagInput.value=''; } });
+    tagContainer.addEventListener('click', e => { const b = e.target.closest('button[data-idx]'); if (!b) return; const i = Number(b.dataset.idx); if (!Number.isNaN(i)) removeTag(i); });
+    tagInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(tagInput.value); tagInput.value=''; }
+      else if (e.key === 'Backspace' && !tagInput.value && tags.length) { tags.pop(); renderTags(); }
+    });
+    tagInput.addEventListener('blur', () => { if (tagInput.value.trim()) { addTag(tagInput.value); tagInput.value=''; } });
 
+    // --- Ingredients dynamic list ---
     const list = q('#ingredient-list');
-    q('#add-ingredient').addEventListener('click', ()=>{ const row=document.createElement('div'); row.className='ingredient-row'; row.innerHTML=`
-      <input type="text" placeholder="Amount (e.g., 500 g, 1 cup)" />
-      <input type="text" placeholder="Item (e.g., chicken breast)" />
-      <input type="text" class="notes" placeholder="Notes (e.g., cubed, unsalted)" />
-      <select><option value="">Required</option><option value="optional">Optional</option></select>
-      <button type="button" class="btn icon danger remove" title="Remove">✕</button>`; list.appendChild(row); });
-    list.addEventListener('click', e=>{ if(e.target.closest('.remove')) e.target.closest('.ingredient-row').remove(); });
+    q('#add-ingredient').addEventListener('click', () => {
+      const row = document.createElement('div');
+      row.className = 'ingredient-row';
+      row.innerHTML = `
+        <input type="text" placeholder="Amount (e.g., 100 g, 1 cup)" />
+        <input type="text" placeholder="Item (e.g., banana)" />
+        <input type="text" class="notes" placeholder="Notes (optional)" />
+        <select><option value="">Required</option><option value="optional">Optional</option></select>
+        <button type="button" class="btn icon danger remove" title="Remove">✕</button>
+      `;
+      list.appendChild(row);
+    });
+    list.addEventListener('click', e => { if (e.target.closest('.remove')) e.target.closest('.ingredient-row').remove(); });
 
+    // --- Collect inputs and build JSON payload ---
     const collectIngredients = () => qa('.ingredient-row', list).map(row => {
       const [amountEl, itemEl, notesEl, optEl] = qa('input, select', row);
-      const item=(itemEl.value||'').trim(); if(!item) return null;
-      const obj={ amount:(amountEl.value||'').trim()||null, item, key:keyFromItem(item) };
-      if((notesEl.value||'').trim()) obj.notes = notesEl.value.trim();
-      if(optEl.value==='optional') obj.optional = true;
+      const item = (itemEl.value || '').trim();
+      if (!item) return null;
+      const obj = { amount: (amountEl.value || '').trim() || null, item, key: keyFromItem(item) };
+      if ((notesEl.value || '').trim()) obj.notes = notesEl.value.trim();
+      if (optEl.value === 'optional') obj.optional = true;
       return obj;
     }).filter(Boolean);
 
     const buildPayload = () => {
       const idVal = Number(q('#recipe-id').value);
-      const nameVal = (q('#recipe-name').value||'').trim();
+      const nameVal = (q('#recipe-name').value || '').trim();
       const servingsVal = Number(q('#recipe-servings').value);
       const ingredients = collectIngredients();
-      const instructions = (q('#instructions').value||'').split('
-').map(s=>s.trim()).filter(Boolean);
-      const tagSet = new Set(ingredients.map(i=>i.key).filter(Boolean));
+      const instructionsRaw = (q('#instructions').value || '');
+      const instructions = instructionsRaw.split('\n').map(s => s.trim()).filter(Boolean);
+
+      const tagSet = new Set(ingredients.map(i => i.key).filter(Boolean));
       const ingredientTags = Array.from(tagSet).sort();
-      const atomSet = new Set(); ingredientTags.forEach(k=>k.split('-').forEach(tok=>tok&&atomSet.add(tok)));
+      const atomSet = new Set();
+      ingredientTags.forEach(k => k.split('-').forEach(tok => tok && atomSet.add(tok)));
       const ingredientAtoms = Array.from(atomSet).sort();
+
       return {
         id: Number.isFinite(idVal) ? idVal : null,
         name: htmlEscape(nameVal),
         servings: Number.isFinite(servingsVal) && servingsVal > 0 ? servingsVal : null,
         tags: [...tags],
         components: [
-          { component_name: 'Ingredients', ingredients },
-          { component_name: 'Instructions', instructions }
+          { component_name: "Ingredients", ingredients },
+          { component_name: "Instructions", instructions }
         ],
         ingredientTags,
         ingredientAtoms
       };
     };
 
+    // --- Render preview ---
     const outputEl = q('#json-output');
-    const renderOutput = obj => { try { const pretty=JSON.stringify(obj,null,2); outputEl.textContent = pretty.split('
-').map(l=>`    ${l}`).join('
-'); } catch(err){ outputEl.textContent = `// Error: ${String(err)}`; } };
+    const renderOutput = obj => {
+      try {
+        const pretty = JSON.stringify(obj, null, 2);
+        const indented = pretty.split('\n').map(line => `    ${line}`).join('\n');
+        outputEl.textContent = indented;
+      } catch (err) {
+        outputEl.textContent = `// Error stringifying JSON: ${String(err)}`;
+      }
+    };
     const handleGenerate = () => renderOutput(buildPayload());
     q('#generate').addEventListener('click', handleGenerate);
     q('#generate-duplicate').addEventListener('click', handleGenerate);
 
-    q('#copy-json').addEventListener('click', async ()=>{ const text=outputEl.textContent||''; if(!text.trim()) return; try { await navigator.clipboard.writeText(text); const btn=q('#copy-json'); const t=btn.textContent; btn.textContent='Copied'; setTimeout(()=>btn.textContent=t,1200); } catch { alert('Copy failed.'); } });
+    // --- Copy JSON ---
+    q('#copy-json').addEventListener('click', async () => {
+      const text = outputEl.textContent || '';
+      if (!text.trim()) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        setStatus('Copied to clipboard', 'ok');
+      } catch {
+        setStatus('Copy failed. Select and copy manually.', 'err');
+      }
+    });
 
-    q('#clear').addEventListener('click', ()=>{ q('#recipe-id').value=''; q('#recipe-name').value=''; q('#recipe-servings').value=''; tags=[]; renderTags();
-      qa('.ingredient-row', list).forEach((row,idx)=>{ if(idx===0){ qa('input',row).forEach(i=>i.value=''); q('select',row).value=''; } else row.remove(); });
-      q('#instructions').value=''; outputEl.innerHTML='<em>// Click “Generate JSON” to see the output here.</em>'; q('#recipe-name').focus(); setStatus(''); });
+    // --- Clear form ---
+    q('#clear').addEventListener('click', () => {
+      q('#recipe-id').value = '';
+      q('#recipe-name').value = '';
+      q('#recipe-servings').value = '';
+      tags = []; renderTags();
+      qa('.ingredient-row', list).forEach((row, idx) => {
+        if (idx === 0) { qa('input', row).forEach(i => i.value=''); q('select', row).value=''; }
+        else row.remove();
+      });
+      q('#instructions').value = '';
+      outputEl.innerHTML = '<em>// Click “Generate JSON” to see the output here.</em>';
+      setStatus('');
+      q('#recipe-name').focus();
+    });
 
-    function validatePayload(p){ if(!p.name||!p.components||!Array.isArray(p.components)) return 'Name and components are required';
-      const ing=p.components.find(c=>c.component_name==='Ingredients'); const inst=p.components.find(c=>c.component_name==='Instructions');
-      if(!ing||!Array.isArray(ing.ingredients)||!ing.ingredients.length) return 'At least one ingredient is required';
-      if(!inst||!Array.isArray(inst.instructions)||!inst.instructions.length) return 'At least one instruction is required'; return null; }
+    // --- Basic validation before sending ---
+    function validatePayload(p) {
+      if (!p.name || !p.components || !Array.isArray(p.components)) return 'Name and components are required.';
+      const ing = p.components.find(c => c.component_name === 'Ingredients');
+      const inst = p.components.find(c => c.component_name === 'Instructions');
+      if (!ing || !Array.isArray(ing.ingredients) || ing.ingredients.length === 0) return 'At least one ingredient is required.';
+      if (!inst || !Array.isArray(inst.instructions) || inst.instructions.length === 0) return 'At least one instruction is required.';
+      return null;
+    }
 
-    q('#submit-to-github').addEventListener('click', ()=>{
-      const payload = buildPayload(); renderOutput(payload);
-      const err = validatePayload(payload); if(err){ setStatus(err,'err'); return; }
-      const title = encodeURIComponent(`New Recipe: ${payload.name || 'Untitled'}`);
-      const body = encodeURIComponent(`### New Recipe Submission
+    // --- POST to Cloudflare Worker ---
+    async function postToWorker(payload, { timeoutMs = 15000 } = {}) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), timeoutMs);
+      try {
+        const res = await fetch(WORKER_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Webhook-Secret': WEBHOOK_SHARED_SECRET
+          },
+          body: JSON.stringify(payload),
+          signal: ctrl.signal
+        });
+        const text = await res.text();
+        if (!res.ok) {
+          throw new Error(`Worker error (${res.status}): ${text || 'no body'}`);
+        }
+        return text || 'OK';
+      } finally {
+        clearTimeout(t);
+      }
+    }
 
-Please do not edit below this line.
+    // --- Wire the Submit button ---
+    const submitBtn = q('#submit-worker');
+    submitBtn.addEventListener('click', async () => {
+      setStatus('');
+      const payload = buildPayload();
+      renderOutput(payload); // keep preview in sync
 
-\`\`\`json
-${JSON.stringify(payload,null,2)}
-\`\`\`
-`);
-      const url = `https://github.com/${REPO_A_OWNER}/${REPO_A_NAME}/issues/new?title=${title}&body=${body}`;
-      window.open(url,'_blank','noopener,noreferrer');
-      setStatus('Opening GitHub Issue with your recipe…','ok');
+      const err = validatePayload(payload);
+      if (err) { setStatus(err, 'err'); return; }
+
+      if (!WORKER_URL || WORKER_URL.includes('<your-worker>')) {
+        setStatus('Please configure WORKER_URL first.', 'err');
+        return;
+      }
+      if (!WEBHOOK_SHARED_SECRET || WEBHOOK_SHARED_SECRET.includes('<YOUR_WEBHOOK_SECRET>')) {
+        setStatus('Please configure WEBHOOK_SHARED_SECRET first.', 'err');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting…';
+      setStatus('Submitting to Worker…');
+
+      try {
+        const result = await postToWorker(payload);
+        setStatus('Submitted successfully. The GitHub workflow will append this recipe to recipes.json.', 'ok');
+      } catch (e) {
+        setStatus(`Submit failed: ${e && e.message ? e.message : String(e)}`, 'err');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit to Worker';
+      }
     });
   </script>
 </body>
