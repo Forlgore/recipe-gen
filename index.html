@@ -38,7 +38,6 @@
     .btn.primary:hover { background: linear-gradient(180deg, #207e90, #176a78); border-color: #1e879a; }
     .btn.icon { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; padding: 0; font-size: 18px; }
     .btn.danger { border-color: rgba(210,76,76,0.3); background: linear-gradient(180deg, rgba(210,76,76,0.18), rgba(210,76,76,0.12)); color: #ffdddd; }
-    .btn.danger:hover { border-color: rgba(210,76,76,0.5); background: linear-gradient(180deg, rgba(210,76,76,0.28), rgba(210,76,76,0.18)); }
     .output { background: linear-gradient(180deg, rgba(19,35,43,0.7), rgba(15,26,32,0.9)); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
     .output-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); padding: 10px 12px; background: linear-gradient(180deg, #0f1a20, #0b1216); }
     .output-header h3 { margin: 0; font-size: 15px; font-weight: 600; color: var(--text-0); letter-spacing: .2px; }
@@ -113,16 +112,16 @@
   </div>
 
   <script>
-    // --- CONFIG: set these to your deployed Worker and secret ---
-    const WORKER_URL = 'https://worker.deafnote.workers.dev/'; // e.g., https://recipe-dispatch.example.workers.dev/
-    const WEBHOOK_SHARED_SECRET = 'generator';              // must match the secret set with `wrangler secret put WEBHOOK_SECRET`
+    // === CONFIG: set these to your deployed Worker and secret ===
+    const WORKER_URL = 'https://worker.deafnote.workers.dev/'; // e.g., https://recipe-dispatch.<subdomain>.workers.dev/
+    const WEBHOOK_SHARED_SECRET = 'generator';                  // must match `wrangler secret put WEBHOOK_SECRET`
 
     // --- Small DOM helpers ---
     const q = (sel, root=document) => root.querySelector(sel);
     const qa = (sel, root=document) => Array.from(root.querySelectorAll(sel));
     const setStatus = (msg, kind='') => { const el = q('#status'); el.textContent = msg || ''; el.className = 'status' + (kind ? ' ' + kind : ''); };
 
-    // --- Tag helpers ---
+    // --- Tag helpers & utilities ---
     const slugify = s => (s||'').toLowerCase().normalize('NFKD')
       .replace(/[\u0300-\u036f]/g,'').replace(/\((?:.|\n)*?\)/g,' ')
       .replace(/[&]/g,' and ').replace(/[^\w\s-]/g,' ').replace(/\s+/g,' ')
@@ -264,7 +263,7 @@
       return null;
     }
 
-    // --- POST to Cloudflare Worker ---
+    // --- POST to Cloudflare Worker (uses your requested fetch pattern) ---
     async function postToWorker(payload, { timeoutMs = 15000 } = {}) {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -273,7 +272,7 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Webhook-Secret': 'generator'
+            'X-Webhook-Secret': WEBHOOK_SHARED_SECRET
           },
           body: JSON.stringify(payload),
           signal: ctrl.signal
@@ -299,12 +298,10 @@
       if (err) { setStatus(err, 'err'); return; }
 
       if (!WORKER_URL || WORKER_URL.includes('<your-worker>')) {
-        setStatus('Please configure WORKER_URL first.', 'err');
-        return;
+        setStatus('Please configure WORKER_URL first.', 'err'); return;
       }
-      if (!WEBHOOK_SHARED_SECRET || WEBHOOK_SHARED_SECRET.includes('<YOUR_WEBHOOK_SECRET>')) {
-        setStatus('Please configure WEBHOOK_SHARED_SECRET first.', 'err');
-        return;
+      if (!WEBHOOK_SHARED_SECRET || WEBHOOK_SHARED_SECRET.includes('<your-secret>')) {
+        setStatus('Please configure WEBHOOK_SHARED_SECRET first.', 'err'); return;
       }
 
       submitBtn.disabled = true;
@@ -312,7 +309,7 @@
       setStatus('Submitting to Worker…');
 
       try {
-        const result = await postToWorker(payload);
+        await postToWorker(payload);
         setStatus('Submitted successfully. The GitHub workflow will append this recipe to recipes.json.', 'ok');
       } catch (e) {
         setStatus(`Submit failed: ${e && e.message ? e.message : String(e)}`, 'err');
